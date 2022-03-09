@@ -14,12 +14,9 @@ import com.deviget.edwinstest.databinding.FragmentItemDetailBinding
 import com.deviget.edwinstest.placeholder.PlaceholderContent
 import com.google.android.material.appbar.CollapsingToolbarLayout
 import io.ktor.client.*
-import io.ktor.client.features.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
 import io.ktor.client.features.logging.*
-import io.ktor.client.request.*
-import io.ktor.http.*
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -93,11 +90,7 @@ class ItemDetailFragment : Fragment() {
         }
 
         runBlocking {
-            RedditApi(HttpClient {
-                install(DefaultRequest) {
-                    header(HttpHeaders.Authorization, "Basic LXFNQ1dEc3gtVFZzRGlobUFkRUxKUTo=")
-                }
-
+            val redditApi = RedditApi(HttpClient {
                 install(JsonFeature) {
                     serializer = KotlinxSerializer(kotlinx.serialization.json.Json {
                         prettyPrint = true
@@ -114,7 +107,11 @@ class ItemDetailFragment : Fragment() {
                     }
                     level = LogLevel.ALL
                 }
-            }).requestAccessToken()
+            })
+
+            val accessToken = redditApi.requestAccessToken().accessToken
+
+            redditApi.getOverallTopPosts(accessToken)
         }
     }
 
