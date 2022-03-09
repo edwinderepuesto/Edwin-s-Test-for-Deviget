@@ -23,6 +23,12 @@ data class PostWrapper(
 
 @Serializable
 data class PostData(
+    @SerialName("id")
+    val id: String,
+
     @SerialName("title")
     val title: String,
+
+    @SerialName("selftext")
+    val selfText: String,
 )

@@ -3,6 +3,7 @@ package com.deviget.edwinstest
 import android.content.ClipData
 import android.content.ClipDescription
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,17 +12,21 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
+import com.deviget.edwinstest.api.PostWrapper
+import com.deviget.edwinstest.api.RedditApi
 import com.deviget.edwinstest.databinding.FragmentItemListBinding
 import com.deviget.edwinstest.databinding.ItemListContentBinding
-import com.deviget.edwinstest.placeholder.PlaceholderContent
+import io.ktor.client.*
+import io.ktor.client.features.json.*
+import io.ktor.client.features.json.serializer.*
+import io.ktor.client.features.logging.*
+import kotlinx.coroutines.runBlocking
 
 /**
- * A Fragment representing a list of Pings. This fragment
- * has different presentations for handset and larger screen devices. On
- * handsets, the fragment presents a list of items, which when touched,
- * lead to a {@link ItemDetailFragment} representing
- * item details. On larger screens, the Navigation controller presents the list of items and
- * item details side-by-side using two vertical panes.
+ * This fragment has different presentations for handset and larger screen devices. On handsets, the
+ * fragment presents a list of items, which when touched, lead to a {@link ItemDetailFragment}
+ * representing item details. On larger screens, the Navigation controller presents the list of
+ * items and item details side-by-side using two vertical panes.
  */
 
 class ItemListFragment : Fragment() {
@@ -58,13 +63,38 @@ class ItemListFragment : Fragment() {
         itemDetailFragmentContainer: View?
     ) {
 
-        recyclerView.adapter = SimpleItemRecyclerViewAdapter(
-            PlaceholderContent.ITEMS, itemDetailFragmentContainer
-        )
+        runBlocking {
+            val redditApi = RedditApi(HttpClient {
+                install(JsonFeature) {
+                    serializer = KotlinxSerializer(kotlinx.serialization.json.Json {
+                        prettyPrint = true
+                        isLenient = true
+                        ignoreUnknownKeys = true
+                    })
+                }
+
+                install(Logging) {
+                    logger = object : Logger {
+                        override fun log(message: String) {
+                            Log.v("Ktor Logger ->", message)
+                        }
+                    }
+                    level = LogLevel.ALL
+                }
+            })
+
+            val accessToken = redditApi.requestAccessToken().accessToken
+
+            val postDataItems = redditApi.getOverallTopPosts(accessToken).data.children
+
+            recyclerView.adapter = SimpleItemRecyclerViewAdapter(
+                postDataItems, itemDetailFragmentContainer
+            )
+        }
     }
 
     class SimpleItemRecyclerViewAdapter(
-        private val values: List<PlaceholderContent.PlaceholderItem>,
+        private val values: List<PostWrapper>,
         private val itemDetailFragmentContainer: View?
     ) :
         RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
@@ -77,17 +107,21 @@ class ItemListFragment : Fragment() {
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val item = values[position]
-            holder.idView.text = item.id
-            holder.contentView.text = item.content
+            holder.idView.text = item.data.id
+            holder.contentView.text = item.data.title
 
             with(holder.itemView) {
                 tag = item
                 setOnClickListener { itemView ->
-                    val clickedItem = itemView.tag as PlaceholderContent.PlaceholderItem
+                    val clickedItem = itemView.tag as PostWrapper
                     val bundle = Bundle()
                     bundle.putString(
-                        ItemDetailFragment.ARG_ITEM_ID,
-                        clickedItem.id
+                        ItemDetailFragment.ARG_POST_TITLE,
+                        clickedItem.data.title
+                    )
+                    bundle.putString(
+                        ItemDetailFragment.ARG_POST_SELF_TEXT,
+                        clickedItem.data.selfText
                     )
                     if (itemDetailFragmentContainer != null) {
                         itemDetailFragmentContainer.findNavController()
@@ -103,10 +137,10 @@ class ItemListFragment : Fragment() {
                  * experience on larger screen devices
                  */
                 setOnContextClickListener { v ->
-                    val contextClickedItem = v.tag as PlaceholderContent.PlaceholderItem
+                    val contextClickedItem = v.tag as PostWrapper
                     Toast.makeText(
                         v.context,
-                        "Context click of item " + contextClickedItem.id,
+                        "Context click of item " + contextClickedItem.data.id,
                         Toast.LENGTH_LONG
                     ).show()
                     true
@@ -115,7 +149,7 @@ class ItemListFragment : Fragment() {
                 setOnLongClickListener { v ->
                     // Setting the item id as the clip data so that the drop target is able to
                     // identify the id of the content
-                    val clipItem = ClipData.Item(item.id)
+                    val clipItem = ClipData.Item(item.data.id)
                     val dragData = ClipData(
                         v.tag as? CharSequence,
                         arrayOf(ClipDescription.MIMETYPE_TEXT_PLAIN),
