@@ -2,15 +2,25 @@ package com.deviget.edwinstest
 
 import android.content.ClipData
 import android.os.Bundle
+import android.util.Log
 import android.view.DragEvent
-import androidx.fragment.app.Fragment
-import com.google.android.material.appbar.CollapsingToolbarLayout
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import com.deviget.edwinstest.placeholder.PlaceholderContent
+import androidx.fragment.app.Fragment
+import com.deviget.edwinstest.api.RedditApi
 import com.deviget.edwinstest.databinding.FragmentItemDetailBinding
+import com.deviget.edwinstest.placeholder.PlaceholderContent
+import com.google.android.material.appbar.CollapsingToolbarLayout
+import io.ktor.client.*
+import io.ktor.client.features.*
+import io.ktor.client.features.json.*
+import io.ktor.client.features.json.serializer.*
+import io.ktor.client.features.logging.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import kotlinx.coroutines.runBlocking
 
 /**
  * A fragment representing a single Item detail screen.
@@ -25,7 +35,7 @@ class ItemDetailFragment : Fragment() {
      */
     private var item: PlaceholderContent.PlaceholderItem? = null
 
-    lateinit var itemDetailTextView: TextView
+    private lateinit var itemDetailTextView: TextView
     private var toolbarLayout: CollapsingToolbarLayout? = null
 
     private var _binding: FragmentItemDetailBinding? = null
@@ -34,7 +44,7 @@ class ItemDetailFragment : Fragment() {
     // onDestroyView.
     private val binding get() = _binding!!
 
-    private val dragListener = View.OnDragListener { v, event ->
+    private val dragListener = View.OnDragListener { _, event ->
         if (event.action == DragEvent.ACTION_DROP) {
             val clipDataItem: ClipData.Item = event.clipData.getItemAt(0)
             val dragData = clipDataItem.text
@@ -60,7 +70,7 @@ class ItemDetailFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
 
         _binding = FragmentItemDetailBinding.inflate(inflater, container, false)
         val rootView = binding.root
@@ -80,6 +90,31 @@ class ItemDetailFragment : Fragment() {
         // Show the placeholder content as text in a TextView.
         item?.let {
             itemDetailTextView.text = it.details
+        }
+
+        runBlocking {
+            RedditApi(HttpClient {
+                install(DefaultRequest) {
+                    header(HttpHeaders.Authorization, "Basic LXFNQ1dEc3gtVFZzRGlobUFkRUxKUTo=")
+                }
+
+                install(JsonFeature) {
+                    serializer = KotlinxSerializer(kotlinx.serialization.json.Json {
+                        prettyPrint = true
+                        isLenient = true
+                        ignoreUnknownKeys = true
+                    })
+                }
+
+                install(Logging) {
+                    logger = object : Logger {
+                        override fun log(message: String) {
+                            Log.v("Ktor Logger ->", message)
+                        }
+                    }
+                    level = LogLevel.ALL
+                }
+            }).requestAccessToken()
         }
     }
 
