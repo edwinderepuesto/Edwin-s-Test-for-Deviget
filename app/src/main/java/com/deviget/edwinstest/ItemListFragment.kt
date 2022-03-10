@@ -3,24 +3,24 @@ package com.deviget.edwinstest
 import android.content.ClipData
 import android.content.ClipDescription
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import com.deviget.edwinstest.api.PostWrapper
-import com.deviget.edwinstest.api.RedditApi
 import com.deviget.edwinstest.databinding.FragmentItemListBinding
 import com.deviget.edwinstest.databinding.ItemListContentBinding
-import io.ktor.client.*
-import io.ktor.client.features.json.*
-import io.ktor.client.features.json.serializer.*
-import io.ktor.client.features.logging.*
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
+
 
 /**
  * This fragment has different presentations for handset and larger screen devices. On handsets, the
@@ -30,6 +30,8 @@ import kotlinx.coroutines.runBlocking
  */
 
 class ItemListFragment : Fragment() {
+    private val viewModel: RedditPostsViewModel by viewModels()
+
     private var _binding: FragmentItemListBinding? = null
 
     // This property is only valid between onCreateView and
@@ -55,41 +57,26 @@ class ItemListFragment : Fragment() {
         // layout configuration (layout, layout-sw600dp)
         val itemDetailFragmentContainer: View? = view.findViewById(R.id.item_detail_nav_container)
 
-        setupRecyclerView(recyclerView, itemDetailFragmentContainer)
-    }
-
-    private fun setupRecyclerView(
-        recyclerView: RecyclerView,
-        itemDetailFragmentContainer: View?
-    ) {
-
-        runBlocking {
-            val redditApi = RedditApi(HttpClient {
-                install(JsonFeature) {
-                    serializer = KotlinxSerializer(kotlinx.serialization.json.Json {
-                        prettyPrint = true
-                        isLenient = true
-                        ignoreUnknownKeys = true
-                    })
-                }
-
-                install(Logging) {
-                    logger = object : Logger {
-                        override fun log(message: String) {
-                            Log.v("Ktor Logger ->", message)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { result ->
+                    when (result) {
+                        is Result.Success -> {
+                            recyclerView.adapter = SimpleItemRecyclerViewAdapter(
+                                result.data, itemDetailFragmentContainer
+                            )
+                            binding.statusTextView.text = "Done"
+                        }
+                        is Result.Loading -> {
+                            binding.statusTextView.text =
+                                if (result.loading) "Fetching..." else "Idle"
+                        }
+                        is Result.Error -> {
+                            binding.statusTextView.text = result.errorMessage
                         }
                     }
-                    level = LogLevel.ALL
                 }
-            })
-
-            val accessToken = redditApi.requestAccessToken().accessToken
-
-            val postDataItems = redditApi.getOverallTopPosts(accessToken).data.children
-
-            recyclerView.adapter = SimpleItemRecyclerViewAdapter(
-                postDataItems, itemDetailFragmentContainer
-            )
+            }
         }
     }
 
