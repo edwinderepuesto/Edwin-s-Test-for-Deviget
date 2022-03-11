@@ -57,8 +57,8 @@ data class PostData(
 
     fun getDisplayCommentCount(): String {
         return if (numberOfComments == 1)
-            "$this comment"
+            "1 comment"
         else
-            "$this comments"
+            "$numberOfComments comments"
     }
 }
