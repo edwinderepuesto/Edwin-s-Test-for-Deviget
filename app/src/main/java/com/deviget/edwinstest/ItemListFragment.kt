@@ -7,17 +7,19 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
+import com.deviget.edwinstest.api.PostData
 import com.deviget.edwinstest.api.PostWrapper
 import com.deviget.edwinstest.databinding.FragmentItemListBinding
 import com.deviget.edwinstest.databinding.ItemListContentBinding
 import kotlinx.coroutines.launch
+import kotlinx.serialization.ExperimentalSerializationApi
 
 
 /**
@@ -27,8 +29,11 @@ import kotlinx.coroutines.launch
  * items and item details side-by-side using two vertical panes.
  */
 
+@ExperimentalSerializationApi
 class ItemListFragment : Fragment() {
-    private val viewModel: RedditPostsViewModel by viewModels()
+    private lateinit var viewModelFactory: RedditPostsViewModelFactory
+
+    private lateinit var viewModel: RedditPostsViewModel
 
     private var _binding: FragmentItemListBinding? = null
 
@@ -40,6 +45,9 @@ class ItemListFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        viewModelFactory = RedditPostsViewModelFactory(requireActivity())
+
+        viewModel = ViewModelProvider(this, viewModelFactory).get(RedditPostsViewModel::class.java)
 
         _binding = FragmentItemListBinding.inflate(inflater, container, false)
         return binding.root
@@ -61,7 +69,7 @@ class ItemListFragment : Fragment() {
                     when (result) {
                         is Result.Success -> {
                             recyclerView.adapter = SimpleItemRecyclerViewAdapter(
-                                result.data, itemDetailFragmentContainer
+                                result.data, itemDetailFragmentContainer, ::savePostAsRead
                             )
                             binding.statusTextView.text = getString(R.string.done)
                         }
@@ -80,9 +88,16 @@ class ItemListFragment : Fragment() {
         }
     }
 
+    private fun savePostAsRead(postData: PostData) {
+        context?.let {
+            viewModel.savePostAsRead(postData)
+        }
+    }
+
     class SimpleItemRecyclerViewAdapter(
         private val values: List<PostWrapper>,
-        private val itemDetailFragmentContainer: View?
+        private val itemDetailFragmentContainer: View?,
+        private val onClickCallback: (PostData) -> Unit
     ) :
         RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.PostItemViewHolder>() {
 
@@ -95,6 +110,7 @@ class ItemListFragment : Fragment() {
         override fun onBindViewHolder(holder: PostItemViewHolder, position: Int) {
             val item = values[position]
             holder.titleTextView.text = item.data.title
+            holder.unreadIndicatorView.visibility = if (item.data.isRead) View.GONE else View.VISIBLE
 
             val displayRelativeTime = item.data.getDisplayRelativeCreationTime()
             val displayCommentCount = item.data.getDisplayCommentCount()
@@ -118,6 +134,8 @@ class ItemListFragment : Fragment() {
             }
 
             holder.itemView.setOnClickListener { itemView ->
+                onClickCallback(item.data)
+
                 val bundle = Bundle()
                 bundle.putString(
                     ItemDetailFragment.ARG_POST_TITLE,
@@ -143,6 +161,7 @@ class ItemListFragment : Fragment() {
             val titleTextView: TextView = binding.titleTextView
             val subTitleTextView: TextView = binding.subTitleTextView
             val thumbnailImageView: ImageView = binding.thumbnailImageView
+            val unreadIndicatorView: TextView = binding.unreadIndicatorView
         }
 
     }

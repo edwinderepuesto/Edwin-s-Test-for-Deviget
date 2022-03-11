@@ -45,6 +45,8 @@ data class PostData(
     @SerialName("num_comments")
     val numberOfComments: Int,
 ) {
+    var isRead: Boolean = false
+
     fun getDisplayRelativeCreationTime(): CharSequence {
         return DateUtils.getRelativeTimeSpanString(
             (createdAt * 1000).toLong(),

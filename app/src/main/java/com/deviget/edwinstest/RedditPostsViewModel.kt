@@ -1,8 +1,11 @@
 package com.deviget.edwinstest
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.deviget.edwinstest.api.PostData
 import com.deviget.edwinstest.api.PostWrapper
 import com.deviget.edwinstest.api.RedditApi
 import io.ktor.client.*
@@ -16,8 +19,20 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.serialization.ExperimentalSerializationApi
+import java.lang.ref.WeakReference
 
-class RedditPostsViewModel : ViewModel() {
+class RedditPostsViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(RedditPostsViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return RedditPostsViewModel(WeakReference(context)) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+
+class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : ViewModel() {
 
     private val _uiState = MutableStateFlow<Result<List<PostWrapper>>>(Result.Loading(false))
     val uiState: StateFlow<Result<List<PostWrapper>>> = _uiState.asStateFlow()
@@ -60,6 +75,18 @@ class RedditPostsViewModel : ViewModel() {
 
                 val postWrapperItems = redditApi.getOverallTopPosts(accessToken).data.children
 
+                contextRef.get()?.let { context ->
+                    val sharedPref =
+                        context.getSharedPreferences("reddit-client", Context.MODE_PRIVATE)
+                    val storedReadPosts: MutableSet<String> =
+                        sharedPref?.getStringSet("read-posts", mutableSetOf()) ?: mutableSetOf()
+
+                    for (currentPost in postWrapperItems) {
+                        val postWasRead = storedReadPosts.contains(currentPost.data.id)
+
+                        currentPost.data.isRead = postWasRead
+                    }
+                }
                 _uiState.update {
                     Result.Success(postWrapperItems)
                 }
@@ -70,6 +97,29 @@ class RedditPostsViewModel : ViewModel() {
                     Result.Error(ioException.message ?: "Unknown error")
                 }
             }
+        }
+    }
+
+    @ExperimentalSerializationApi
+    fun savePostAsRead(postData: PostData) {
+        postData.isRead = true
+        _uiState.update {
+            _uiState.value
+        }
+
+        contextRef.get()?.let { context ->
+            val sharedPref = context.getSharedPreferences("reddit-client", Context.MODE_PRIVATE)
+
+            val storedReadPosts: MutableSet<String> =
+                sharedPref.getStringSet("read-posts", mutableSetOf()) ?: mutableSetOf()
+
+            // We need a copy of the stored set in order to safely add more items without referencing
+            // the original. More info: https://stackoverflow.com/a/14034804
+            val newReadPosts = mutableSetOf<String>()
+            newReadPosts.addAll(storedReadPosts)
+            newReadPosts.add(postData.id)
+
+            sharedPref.edit().putStringSet("read-posts", newReadPosts).apply()
         }
     }
 }

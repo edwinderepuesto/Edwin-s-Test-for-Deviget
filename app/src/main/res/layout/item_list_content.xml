@@ -28,6 +28,16 @@
         tools:text="Title" />
 
     <TextView
+        android:id="@+id/unread_indicator_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="10dp"
+        android:text="@string/circle_emoji"
+        app:layout_constraintEnd_toStartOf="@id/sub_title_text_view"
+        app:layout_constraintTop_toBottomOf="@id/title_text_view" />
+
+    <TextView
         android:id="@+id/sub_title_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
