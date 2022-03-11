@@ -1,5 +1,6 @@
 package com.deviget.edwinstest.api
 
+import android.text.format.DateUtils
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -26,9 +27,38 @@ data class PostData(
     @SerialName("id")
     val id: String,
 
+    @SerialName("created")
+    val createdAt: Double,
+
+    @SerialName("author")
+    val authorName: String,
+
     @SerialName("title")
     val title: String,
 
     @SerialName("selftext")
     val selfText: String,
-)
+
+    @SerialName("thumbnail")
+    val thumbnailUrl: String,
+
+    @SerialName("num_comments")
+    val numberOfComments: Int,
+) {
+    fun getDisplayRelativeCreationTime(): CharSequence {
+        return DateUtils.getRelativeTimeSpanString(
+            (createdAt * 1000).toLong(),
+            System.currentTimeMillis(),
+            1,
+            DateUtils.FORMAT_ABBREV_RELATIVE
+        )
+
+    }
+
+    fun getDisplayCommentCount(): String {
+        return if (numberOfComments == 1)
+            "$this comment"
+        else
+            "$this comments"
+    }
+}

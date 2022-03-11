@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">Edwin\'s Test</string>
     <string name="title_item_detail">Item Detail</string>
+    <string name="post_thumbnail">Post thumbnail</string>
+    <string name="done">Done</string>
+    <string name="fetching">Fetching…</string>
+    <string name="idle">Idle</string>
+    <string name="post_sub_title">%1$s · %2$s · %3$s</string>
+
 </resources>

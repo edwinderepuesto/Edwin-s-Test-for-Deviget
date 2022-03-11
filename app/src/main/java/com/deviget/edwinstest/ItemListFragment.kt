@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -15,10 +16,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
+import coil.load
 import com.deviget.edwinstest.api.PostWrapper
 import com.deviget.edwinstest.databinding.FragmentItemListBinding
 import com.deviget.edwinstest.databinding.ItemListContentBinding
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 
@@ -65,11 +66,13 @@ class ItemListFragment : Fragment() {
                             recyclerView.adapter = SimpleItemRecyclerViewAdapter(
                                 result.data, itemDetailFragmentContainer
                             )
-                            binding.statusTextView.text = "Done"
+                            binding.statusTextView.text = getString(R.string.done)
                         }
                         is Result.Loading -> {
                             binding.statusTextView.text =
-                                if (result.loading) "Fetching..." else "Idle"
+                                getString(
+                                    if (result.loading) R.string.fetching else R.string.idle
+                                )
                         }
                         is Result.Error -> {
                             binding.statusTextView.text = result.errorMessage
@@ -84,18 +87,38 @@ class ItemListFragment : Fragment() {
         private val values: List<PostWrapper>,
         private val itemDetailFragmentContainer: View?
     ) :
-        RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.ViewHolder>() {
+        RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.PostItemViewHolder>() {
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PostItemViewHolder {
             val binding =
                 ItemListContentBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-            return ViewHolder(binding)
+            return PostItemViewHolder(binding)
         }
 
-        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        override fun onBindViewHolder(holder: PostItemViewHolder, position: Int) {
             val item = values[position]
-            holder.idView.text = item.data.id
-            holder.contentView.text = item.data.title
+            holder.titleTextView.text = item.data.title
+
+            val displayRelativeTime = item.data.getDisplayRelativeCreationTime()
+            val displayCommentCount = item.data.getDisplayCommentCount()
+
+            holder.subTitleTextView.text = holder.thumbnailImageView.context.getString(
+                R.string.post_sub_title,
+                item.data.authorName,
+                displayRelativeTime,
+                displayCommentCount
+            )
+
+            val validatedImageSource =
+                if (item.data.thumbnailUrl == "default")
+                    R.drawable.reddit_logo
+                else
+                    item.data.thumbnailUrl
+
+            holder.thumbnailImageView.load(validatedImageSource) {
+                crossfade(true)
+                fallback(R.drawable.reddit_logo)
+            }
 
             with(holder.itemView) {
                 tag = item
@@ -155,10 +178,11 @@ class ItemListFragment : Fragment() {
 
         override fun getItemCount() = values.size
 
-        inner class ViewHolder(binding: ItemListContentBinding) :
+        inner class PostItemViewHolder(binding: ItemListContentBinding) :
             RecyclerView.ViewHolder(binding.root) {
-            val idView: TextView = binding.idText
-            val contentView: TextView = binding.content
+            val titleTextView: TextView = binding.titleTextView
+            val subTitleTextView: TextView = binding.subTitleTextView
+            val thumbnailImageView: ImageView = binding.thumbnailImageView
         }
 
     }
