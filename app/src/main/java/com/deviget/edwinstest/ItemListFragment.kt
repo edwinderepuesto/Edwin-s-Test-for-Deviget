@@ -1,5 +1,7 @@
 package com.deviget.edwinstest
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -110,12 +112,13 @@ class ItemListFragment : Fragment() {
         override fun onBindViewHolder(holder: PostItemViewHolder, position: Int) {
             val item = values[position]
             holder.titleTextView.text = item.data.title
-            holder.unreadIndicatorView.visibility = if (item.data.isRead) View.GONE else View.VISIBLE
+            holder.unreadIndicatorView.visibility =
+                if (item.data.isRead) View.GONE else View.VISIBLE
 
             val displayRelativeTime = item.data.getDisplayRelativeCreationTime()
             val displayCommentCount = item.data.getDisplayCommentCount()
 
-            holder.subTitleTextView.text = holder.thumbnailImageView.context.getString(
+            holder.subTitleTextView.text = holder.subTitleTextView.context.getString(
                 R.string.post_sub_title,
                 item.data.authorName,
                 displayRelativeTime,
@@ -131,6 +134,11 @@ class ItemListFragment : Fragment() {
             holder.thumbnailImageView.load(validatedImageSource) {
                 crossfade(true)
                 fallback(R.drawable.reddit_logo)
+            }
+
+            holder.thumbnailImageView.setOnClickListener {
+                val urlIntent = Intent(Intent.ACTION_VIEW, Uri.parse(item.data.url))
+                it.context.startActivity(urlIntent)
             }
 
             holder.itemView.setOnClickListener { itemView ->
