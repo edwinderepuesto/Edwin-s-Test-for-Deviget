@@ -1,14 +1,11 @@
 package com.deviget.edwinstest
 
-import android.content.ClipData
-import android.content.ClipDescription
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -120,58 +117,21 @@ class ItemListFragment : Fragment() {
                 fallback(R.drawable.reddit_logo)
             }
 
-            with(holder.itemView) {
-                tag = item
-                setOnClickListener { itemView ->
-                    val clickedItem = itemView.tag as PostWrapper
-                    val bundle = Bundle()
-                    bundle.putString(
-                        ItemDetailFragment.ARG_POST_TITLE,
-                        clickedItem.data.title
-                    )
-                    bundle.putString(
-                        ItemDetailFragment.ARG_POST_SELF_TEXT,
-                        clickedItem.data.selfText
-                    )
-                    if (itemDetailFragmentContainer != null) {
-                        itemDetailFragmentContainer.findNavController()
-                            .navigate(R.id.fragment_item_detail, bundle)
-                    } else {
-                        itemView.findNavController().navigate(R.id.show_item_detail, bundle)
-                    }
-                }
-
-                /**
-                 * Context click listener to handle Right click events
-                 * from mice and trackpad input to provide a more native
-                 * experience on larger screen devices
-                 */
-                setOnContextClickListener { v ->
-                    val contextClickedItem = v.tag as PostWrapper
-                    Toast.makeText(
-                        v.context,
-                        "Context click of item " + contextClickedItem.data.id,
-                        Toast.LENGTH_LONG
-                    ).show()
-                    true
-                }
-
-                setOnLongClickListener { v ->
-                    // Setting the item id as the clip data so that the drop target is able to
-                    // identify the id of the content
-                    val clipItem = ClipData.Item(item.data.id)
-                    val dragData = ClipData(
-                        v.tag as? CharSequence,
-                        arrayOf(ClipDescription.MIMETYPE_TEXT_PLAIN),
-                        clipItem
-                    )
-
-                    v.startDragAndDrop(
-                        dragData,
-                        View.DragShadowBuilder(v),
-                        null,
-                        0
-                    )
+            holder.itemView.setOnClickListener { itemView ->
+                val bundle = Bundle()
+                bundle.putString(
+                    ItemDetailFragment.ARG_POST_TITLE,
+                    item.data.title
+                )
+                bundle.putString(
+                    ItemDetailFragment.ARG_POST_SELF_TEXT,
+                    item.data.selfText
+                )
+                if (itemDetailFragmentContainer != null) {
+                    itemDetailFragmentContainer.findNavController()
+                        .navigate(R.id.fragment_item_detail, bundle)
+                } else {
+                    itemView.findNavController().navigate(R.id.show_item_detail, bundle)
                 }
             }
         }
