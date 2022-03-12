@@ -1,13 +1,14 @@
 package com.deviget.edwinstest
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.fragment.app.Fragment
+import coil.load
 import com.deviget.edwinstest.databinding.FragmentItemDetailBinding
-import com.google.android.material.appbar.CollapsingToolbarLayout
 
 /**
  * A fragment representing a single Item detail screen.
@@ -17,10 +18,9 @@ import com.google.android.material.appbar.CollapsingToolbarLayout
  */
 class ItemDetailFragment : Fragment() {
     private var postTitle: String? = null
-    private var postSelfText: String? = null
-
-    private lateinit var itemDetailTextView: TextView
-    private var toolbarLayout: CollapsingToolbarLayout? = null
+    private var postSubTitle: String? = null
+    private var postUrl: String? = null
+    private var postThumbnailUrl: String? = null
 
     private var _binding: FragmentItemDetailBinding? = null
 
@@ -33,7 +33,9 @@ class ItemDetailFragment : Fragment() {
 
         arguments?.let {
             postTitle = it.getString(ARG_POST_TITLE)
-            postSelfText = it.getString(ARG_POST_SELF_TEXT)
+            postSubTitle = it.getString(ARG_POST_SUB_TITLE)
+            postUrl = it.getString(ARG_POST_URL)
+            postThumbnailUrl = it.getString(ARG_POST_THUMBNAIL_URL)
         }
     }
 
@@ -45,18 +47,30 @@ class ItemDetailFragment : Fragment() {
         _binding = FragmentItemDetailBinding.inflate(inflater, container, false)
         val rootView = binding.root
 
-        toolbarLayout = binding.toolbarLayout
-        itemDetailTextView = binding.itemDetail
-
         updateContent()
 
         return rootView
     }
 
     private fun updateContent() {
-        toolbarLayout?.title = postTitle
-        itemDetailTextView.text =
-            if (postSelfText.isNullOrBlank()) "(No post body)" else postSelfText
+        binding.toolbarLayout?.title = getString(R.string.details)
+        binding.detailTitleTextView?.text = postTitle
+        binding.detailSubTitleTextView?.text = postSubTitle
+
+        val validatedImageSource =
+            if (postThumbnailUrl == "default")
+                R.drawable.reddit_logo
+            else
+                postThumbnailUrl
+
+        binding.detailImageView?.apply {
+            load(validatedImageSource) { crossfade(true) }
+
+            setOnClickListener {
+                val urlIntent = Intent(Intent.ACTION_VIEW, Uri.parse(postUrl))
+                it.context.startActivity(urlIntent)
+            }
+        }
     }
 
     override fun onDestroyView() {
@@ -66,6 +80,8 @@ class ItemDetailFragment : Fragment() {
 
     companion object {
         const val ARG_POST_TITLE = "ARG_POST_TITLE"
-        const val ARG_POST_SELF_TEXT = "ARG_POST_SELF_TEXT"
+        const val ARG_POST_SUB_TITLE = "ARG_POST_SUB_TITLE"
+        const val ARG_POST_URL = "ARG_POST_URL"
+        const val ARG_POST_THUMBNAIL_URL = "ARG_POST_THUMBNAIL_URL"
     }
 }

@@ -39,9 +39,6 @@ data class PostData(
     @SerialName("title")
     val title: String,
 
-    @SerialName("selftext")
-    val selfText: String,
-
     @SerialName("url")
     val url: String,
 

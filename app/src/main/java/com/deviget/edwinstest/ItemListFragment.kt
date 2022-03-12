@@ -154,12 +154,14 @@ class ItemListFragment : Fragment() {
             val displayRelativeTime = item.data.getDisplayRelativeCreationTime()
             val displayCommentCount = item.data.getDisplayCommentCount()
 
-            holder.subTitleTextView.text = holder.subTitleTextView.context.getString(
+            val subTitleText = holder.subTitleTextView.context.getString(
                 R.string.post_sub_title,
                 item.data.authorName,
                 displayRelativeTime,
                 displayCommentCount
             )
+
+            holder.subTitleTextView.text = subTitleText
 
             val validatedImageSource =
                 if (item.data.thumbnailUrl == "default")
@@ -167,14 +169,16 @@ class ItemListFragment : Fragment() {
                 else
                     item.data.thumbnailUrl
 
-            holder.thumbnailImageView.load(validatedImageSource) {
-                crossfade(true)
-                fallback(R.drawable.reddit_logo)
-            }
+            holder.thumbnailImageView.apply {
+                load(validatedImageSource) {
+                    crossfade(true)
+                    fallback(R.drawable.reddit_logo)
+                }
 
-            holder.thumbnailImageView.setOnClickListener {
-                val urlIntent = Intent(Intent.ACTION_VIEW, Uri.parse(item.data.url))
-                it.context.startActivity(urlIntent)
+                setOnClickListener {
+                    val urlIntent = Intent(Intent.ACTION_VIEW, Uri.parse(item.data.url))
+                    it.context.startActivity(urlIntent)
+                }
             }
 
             holder.dismissPostButton.setOnClickListener {
@@ -190,8 +194,16 @@ class ItemListFragment : Fragment() {
                     item.data.title
                 )
                 bundle.putString(
-                    ItemDetailFragment.ARG_POST_SELF_TEXT,
-                    item.data.selfText
+                    ItemDetailFragment.ARG_POST_SUB_TITLE,
+                    subTitleText
+                )
+                bundle.putString(
+                    ItemDetailFragment.ARG_POST_URL,
+                    item.data.url
+                )
+                bundle.putString(
+                    ItemDetailFragment.ARG_POST_THUMBNAIL_URL,
+                    item.data.thumbnailUrl
                 )
                 if (itemDetailFragmentContainer != null) {
                     itemDetailFragmentContainer.findNavController()
