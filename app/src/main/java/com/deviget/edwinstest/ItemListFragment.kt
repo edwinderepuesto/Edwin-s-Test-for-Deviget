@@ -71,7 +71,10 @@ class ItemListFragment : Fragment() {
                     when (result) {
                         is Result.Success -> {
                             recyclerView.adapter = SimpleItemRecyclerViewAdapter(
-                                result.data, itemDetailFragmentContainer, ::savePostAsRead
+                                result.data,
+                                itemDetailFragmentContainer,
+                                ::savePostAsRead,
+                                ::dismissPosition
                             )
                             binding.statusTextView.text = getString(R.string.done)
                         }
@@ -91,15 +94,18 @@ class ItemListFragment : Fragment() {
     }
 
     private fun savePostAsRead(postData: PostData) {
-        context?.let {
-            viewModel.savePostAsRead(postData)
-        }
+        viewModel.savePostAsRead(postData)
+    }
+
+    private fun dismissPosition(position: Int) {
+        viewModel.dismissPost(position)
     }
 
     class SimpleItemRecyclerViewAdapter(
         private val values: List<PostWrapper>,
         private val itemDetailFragmentContainer: View?,
-        private val onClickCallback: (PostData) -> Unit
+        private val onClickCallback: (PostData) -> Unit,
+        private val onDismissPositionCallback: (Int) -> Unit
     ) :
         RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.PostItemViewHolder>() {
 
@@ -141,6 +147,10 @@ class ItemListFragment : Fragment() {
                 it.context.startActivity(urlIntent)
             }
 
+            holder.dismissPostButton.setOnClickListener {
+                onDismissPositionCallback(position)
+            }
+
             holder.itemView.setOnClickListener { itemView ->
                 onClickCallback(item.data)
 
@@ -170,6 +180,7 @@ class ItemListFragment : Fragment() {
             val subTitleTextView: TextView = binding.subTitleTextView
             val thumbnailImageView: ImageView = binding.thumbnailImageView
             val unreadIndicatorView: TextView = binding.unreadIndicatorView
+            val dismissPostButton: TextView = binding.dismissPostButton
         }
 
     }

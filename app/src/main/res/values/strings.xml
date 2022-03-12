@@ -7,5 +7,6 @@
     <string name="idle">Idle</string>
     <string name="post_sub_title">%1$s · %2$s · %3$s</string>
     <string name="circle_emoji">🔴</string>
+    <string name="cross_mark_emoji">❌</string>
 
 </resources>

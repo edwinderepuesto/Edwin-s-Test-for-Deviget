@@ -33,7 +33,6 @@ class RedditPostsViewModelFactory(private val context: Context) : ViewModelProvi
 }
 
 class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : ViewModel() {
-
     private val _uiState = MutableStateFlow<Result<List<PostWrapper>>>(Result.Loading(false))
     val uiState: StateFlow<Result<List<PostWrapper>>> = _uiState.asStateFlow()
 
@@ -120,6 +119,16 @@ class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : Vie
             newReadPosts.add(postData.id)
 
             sharedPref.edit().putStringSet("read-posts", newReadPosts).apply()
+        }
+    }
+
+    fun dismissPost(position: Int) {
+        (_uiState.value as? Result.Success)?.let { value ->
+            val mutableList = value.data.toMutableList()
+            mutableList.removeAt(position)
+            _uiState.update {
+                Result.Success(mutableList)
+            }
         }
     }
 }
