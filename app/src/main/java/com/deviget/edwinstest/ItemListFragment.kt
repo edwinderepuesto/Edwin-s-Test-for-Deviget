@@ -6,6 +6,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
@@ -20,6 +22,7 @@ import com.deviget.edwinstest.api.PostData
 import com.deviget.edwinstest.api.PostWrapper
 import com.deviget.edwinstest.databinding.FragmentItemListBinding
 import com.deviget.edwinstest.databinding.ItemListContentBinding
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.ExperimentalSerializationApi
 
@@ -49,7 +52,7 @@ class ItemListFragment : Fragment() {
     ): View {
         viewModelFactory = RedditPostsViewModelFactory(requireActivity())
 
-        viewModel = ViewModelProvider(this, viewModelFactory).get(RedditPostsViewModel::class.java)
+        viewModel = ViewModelProvider(this, viewModelFactory)[RedditPostsViewModel::class.java]
 
         _binding = FragmentItemListBinding.inflate(inflater, container, false)
         return binding.root
@@ -74,7 +77,7 @@ class ItemListFragment : Fragment() {
                                 result.data,
                                 itemDetailFragmentContainer,
                                 ::savePostAsRead,
-                                ::dismissPosition
+                                ::dismissPost
                             )
                             binding.statusTextView.text = getString(R.string.done)
                         }
@@ -88,8 +91,22 @@ class ItemListFragment : Fragment() {
                             binding.statusTextView.text = result.errorMessage
                         }
                     }
+                    binding.dismissOrFetchLink.text =
+                        getString(
+                            if (viewModel.hasData())
+                                R.string.dismiss_all
+                            else
+                                R.string.fetch_again
+                        )
                 }
             }
+        }
+
+        binding.dismissOrFetchLink.setOnClickListener {
+            if (viewModel.hasData())
+                dismissAllPosts()
+            else
+                viewModel.fetchPosts()
         }
     }
 
@@ -97,15 +114,25 @@ class ItemListFragment : Fragment() {
         viewModel.savePostAsRead(postData)
     }
 
-    private fun dismissPosition(position: Int) {
-        viewModel.dismissPost(position)
+    private fun dismissPost(postIdToDelete: String, itemHolderView: View) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            itemHolderView.slideOutRightAndWaitUntilFinished()
+            viewModel.removePostIdFromDataSet(postIdToDelete)
+        }
+    }
+
+    private fun dismissAllPosts() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            binding.itemList.slideOutRightAndWaitUntilFinished()
+            viewModel.clearDataSet()
+        }
     }
 
     class SimpleItemRecyclerViewAdapter(
         private val values: List<PostWrapper>,
         private val itemDetailFragmentContainer: View?,
         private val onClickCallback: (PostData) -> Unit,
-        private val onDismissPositionCallback: (Int) -> Unit
+        private val onDismissPostCallback: (String, View) -> Unit
     ) :
         RecyclerView.Adapter<SimpleItemRecyclerViewAdapter.PostItemViewHolder>() {
 
@@ -148,7 +175,7 @@ class ItemListFragment : Fragment() {
             }
 
             holder.dismissPostButton.setOnClickListener {
-                onDismissPositionCallback(position)
+                onDismissPostCallback(item.data.id, holder.itemView)
             }
 
             holder.itemView.setOnClickListener { itemView ->
@@ -188,5 +215,19 @@ class ItemListFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private suspend fun View.slideOutRightAndWaitUntilFinished() {
+        val slideOutAnimation: Animation = AnimationUtils.loadAnimation(
+            this.context,
+            android.R.anim.slide_out_right
+        )
+        slideOutAnimation.duration = ANIMATION_DURATION_MILLIS
+        this.startAnimation(slideOutAnimation)
+        delay(ANIMATION_DURATION_MILLIS)
+    }
+
+    companion object {
+        const val ANIMATION_DURATION_MILLIS = 300L
     }
 }

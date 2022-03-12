@@ -61,7 +61,7 @@ class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : Vie
         fetchPosts()
     }
 
-    private fun fetchPosts() {
+    fun fetchPosts() {
         fetchJob?.cancel()
 
         fetchJob = viewModelScope.launch {
@@ -122,13 +122,29 @@ class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : Vie
         }
     }
 
-    fun dismissPost(position: Int) {
+    fun removePostIdFromDataSet(postIdToDelete: String) {
         (_uiState.value as? Result.Success)?.let { value ->
-            val mutableList = value.data.toMutableList()
-            mutableList.removeAt(position)
+            val reducedList = value.data.toMutableList()
+            // Delete using post id and not recycler view position, to avoid any edge case of
+            // queued animation delays making us target the wrong post for deletion here:
+            reducedList.removeIf { item -> item.data.id == postIdToDelete }
             _uiState.update {
-                Result.Success(mutableList)
+                Result.Success(reducedList)
             }
         }
+    }
+
+    fun clearDataSet() {
+        _uiState.update {
+            Result.Success(emptyList())
+        }
+    }
+
+    fun hasData(): Boolean {
+        (_uiState.value as? Result.Success)?.let { value ->
+            return value.data.isNotEmpty()
+        }
+
+        return false
     }
 }
