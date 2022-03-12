@@ -65,6 +65,17 @@ class ItemListFragment : Fragment() {
         // layout configuration (layout, layout-sw600dp)
         val itemDetailFragmentContainer: View? = view.findViewById(R.id.item_detail_nav_container)
 
+        binding.swipeRefreshLayout.setOnRefreshListener {
+            viewModel.fetchPostsPage()
+        }
+
+        binding.dismissOrFetchLink.setOnClickListener {
+            if (viewModel.hasData())
+                dismissAllPosts()
+            else
+                viewModel.fetchPostsPage()
+        }
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { result ->
@@ -100,17 +111,6 @@ class ItemListFragment : Fragment() {
                         )
                 }
             }
-        }
-
-        binding.swipeRefreshLayout.setOnRefreshListener {
-            viewModel.fetchPostsPage()
-        }
-
-        binding.dismissOrFetchLink.setOnClickListener {
-            if (viewModel.hasData())
-                dismissAllPosts()
-            else
-                viewModel.fetchPostsPage()
         }
     }
 
