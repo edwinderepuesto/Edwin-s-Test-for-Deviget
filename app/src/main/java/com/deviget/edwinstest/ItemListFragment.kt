@@ -80,6 +80,7 @@ class ItemListFragment : Fragment() {
                                 ::dismissPost
                             )
                             binding.statusTextView.text = getString(R.string.done)
+                            binding.swipeRefreshLayout.isRefreshing = false
                         }
                         is Result.Loading -> {
                             binding.statusTextView.text =
@@ -89,6 +90,7 @@ class ItemListFragment : Fragment() {
                         }
                         is Result.Error -> {
                             binding.statusTextView.text = result.errorMessage
+                            binding.swipeRefreshLayout.isRefreshing = false
                         }
                     }
                     binding.dismissOrFetchLink.text =
@@ -100,6 +102,10 @@ class ItemListFragment : Fragment() {
                         )
                 }
             }
+        }
+
+        binding.swipeRefreshLayout.setOnRefreshListener {
+            viewModel.fetchPosts()
         }
 
         binding.dismissOrFetchLink.setOnClickListener {
