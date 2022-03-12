@@ -15,8 +15,8 @@ class RedditApi(private val client: HttpClient) {
             })
         }
 
-    suspend fun getOverallTopPosts(accessToken: String): PostsPage =
-        client.get("https://oauth.reddit.com/top") {
+    suspend fun getTopPostsPage(accessToken: String, after: String): PostsPage =
+        client.get("https://oauth.reddit.com/top?after=$after") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
         }
 }

@@ -12,6 +12,9 @@ data class PostsPage(
 
 @Serializable
 data class PostsPageData(
+    @SerialName("after")
+    val after: String,
+
     @SerialName("children")
     val children: List<PostWrapper>,
 )

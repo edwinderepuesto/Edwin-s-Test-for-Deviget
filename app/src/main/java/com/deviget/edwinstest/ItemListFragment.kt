@@ -61,9 +61,6 @@ class ItemListFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        val recyclerView: RecyclerView = binding.itemList
-
         // Leaving this not using view binding as it relies on if the view is visible the current
         // layout configuration (layout, layout-sw600dp)
         val itemDetailFragmentContainer: View? = view.findViewById(R.id.item_detail_nav_container)
@@ -73,7 +70,7 @@ class ItemListFragment : Fragment() {
                 viewModel.uiState.collect { result ->
                     when (result) {
                         is Result.Success -> {
-                            recyclerView.adapter = SimpleItemRecyclerViewAdapter(
+                            binding.itemList.adapter = SimpleItemRecyclerViewAdapter(
                                 result.data,
                                 itemDetailFragmentContainer,
                                 ::savePostAsRead,
@@ -85,7 +82,7 @@ class ItemListFragment : Fragment() {
                         is Result.Loading -> {
                             binding.statusTextView.text =
                                 getString(
-                                    if (result.loading) R.string.fetching else R.string.idle
+                                    if (result.loading) R.string.fetching_new_page else R.string.idle
                                 )
                         }
                         is Result.Error -> {
@@ -98,21 +95,21 @@ class ItemListFragment : Fragment() {
                             if (viewModel.hasData())
                                 R.string.dismiss_all
                             else
-                                R.string.fetch_again
+                                R.string.fetch_page
                         )
                 }
             }
         }
 
         binding.swipeRefreshLayout.setOnRefreshListener {
-            viewModel.fetchPosts()
+            viewModel.fetchPostsPage()
         }
 
         binding.dismissOrFetchLink.setOnClickListener {
             if (viewModel.hasData())
                 dismissAllPosts()
             else
-                viewModel.fetchPosts()
+                viewModel.fetchPostsPage()
         }
     }
 

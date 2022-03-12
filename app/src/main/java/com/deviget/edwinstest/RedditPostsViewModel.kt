@@ -38,6 +38,8 @@ class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : Vie
 
     private var fetchJob: Job? = null
 
+    private var after: String = ""
+
     private val redditApi = RedditApi(HttpClient {
         install(JsonFeature) {
             serializer = KotlinxSerializer(kotlinx.serialization.json.Json {
@@ -58,10 +60,10 @@ class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : Vie
     })
 
     init {
-        fetchPosts()
+        fetchPostsPage()
     }
 
-    fun fetchPosts() {
+    fun fetchPostsPage() {
         fetchJob?.cancel()
 
         fetchJob = viewModelScope.launch {
@@ -72,7 +74,9 @@ class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : Vie
 
                 val accessToken = redditApi.requestAccessToken().accessToken
 
-                val postWrapperItems = redditApi.getOverallTopPosts(accessToken).data.children
+                val pageData = redditApi.getTopPostsPage(accessToken, after).data
+
+                val newPostWrapperItems = pageData.children
 
                 contextRef.get()?.let { context ->
                     val sharedPref =
@@ -80,14 +84,17 @@ class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : Vie
                     val storedReadPosts: MutableSet<String> =
                         sharedPref?.getStringSet("read-posts", mutableSetOf()) ?: mutableSetOf()
 
-                    for (currentPost in postWrapperItems) {
+                    for (currentPost in newPostWrapperItems) {
                         val postWasRead = storedReadPosts.contains(currentPost.data.id)
 
                         currentPost.data.isRead = postWasRead
                     }
                 }
+
+                after = pageData.after
+
                 _uiState.update {
-                    Result.Success(postWrapperItems)
+                    Result.Success(newPostWrapperItems)
                 }
             } catch (ioException: IOException) {
                 Log.d("ktor", "Error fetching posts:")

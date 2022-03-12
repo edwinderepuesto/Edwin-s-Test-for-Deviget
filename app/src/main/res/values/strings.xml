@@ -3,12 +3,12 @@
     <string name="title_item_detail">Item Detail</string>
     <string name="post_thumbnail">Post thumbnail</string>
     <string name="done">Done</string>
-    <string name="fetching">Fetching…</string>
+    <string name="fetching_new_page">Fetching new page…</string>
     <string name="idle">Idle</string>
     <string name="post_sub_title">%1$s · %2$s · %3$s</string>
     <string name="circle_emoji">🔴</string>
     <string name="cross_mark_emoji">❌</string>
     <string name="dismiss_all">[Dismiss All]</string>
-    <string name="fetch_again">[Fetch Again]</string>
+    <string name="fetch_page">[Fetch Page]</string>
 
 </resources>
