@@ -1,5 +1,6 @@
 package com.deviget.edwinstest
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -76,17 +77,21 @@ class ItemListFragment : Fragment() {
                 viewModel.fetchPostsPage()
         }
 
+        val adapter = SimpleItemRecyclerViewAdapter(
+            emptyList(),
+            itemDetailFragmentContainer,
+            ::savePostAsRead,
+            ::dismissPost
+        )
+
+        binding.itemList.adapter = adapter
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { result ->
                     when (result) {
                         is Result.Success -> {
-                            binding.itemList.adapter = SimpleItemRecyclerViewAdapter(
-                                result.data,
-                                itemDetailFragmentContainer,
-                                ::savePostAsRead,
-                                ::dismissPost
-                            )
+                            adapter.updateDataSet(result.data)
                             binding.statusTextView.text = getString(R.string.done)
                             binding.swipeRefreshLayout.isRefreshing = false
                         }
@@ -133,7 +138,7 @@ class ItemListFragment : Fragment() {
     }
 
     class SimpleItemRecyclerViewAdapter(
-        private val values: List<PostWrapper>,
+        private var values: List<PostWrapper>,
         private val itemDetailFragmentContainer: View?,
         private val onClickCallback: (PostData) -> Unit,
         private val onDismissPostCallback: (String, View) -> Unit
@@ -216,6 +221,12 @@ class ItemListFragment : Fragment() {
         }
 
         override fun getItemCount() = values.size
+
+        @SuppressLint("NotifyDataSetChanged")
+        fun updateDataSet(newData: List<PostWrapper>) {
+            values = newData
+            notifyDataSetChanged()
+        }
 
         inner class PostItemViewHolder(binding: ItemListContentBinding) :
             RecyclerView.ViewHolder(binding.root) {

@@ -109,8 +109,12 @@ class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : Vie
     @ExperimentalSerializationApi
     fun savePostAsRead(postData: PostData) {
         postData.isRead = true
-        _uiState.update {
-            _uiState.value
+
+        // Force UI update to reflect unread status change on tablets:
+        (_uiState.value as? Result.Success)?.let { value ->
+            val currentData = value.data
+            _uiState.update { Result.Loading(false) }
+            _uiState.update { Result.Success(currentData) }
         }
 
         contextRef.get()?.let { context ->
