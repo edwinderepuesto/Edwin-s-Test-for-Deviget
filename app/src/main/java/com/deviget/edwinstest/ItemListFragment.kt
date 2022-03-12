@@ -84,6 +84,7 @@ class ItemListFragment : Fragment() {
                                 getString(
                                     if (result.loading) R.string.fetching_new_page else R.string.idle
                                 )
+                            binding.swipeRefreshLayout.isRefreshing = result.loading
                         }
                         is Result.Error -> {
                             binding.statusTextView.text = result.errorMessage
