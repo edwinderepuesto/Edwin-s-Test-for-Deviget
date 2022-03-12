@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <external-path
+        name="*"
+        path="DCIM" />
+    <external-path
+        name="downloads"
+        path="." />
+    <external-path name="external_files" path="Android/data/com.deviget.edwinstest/files/Download"/>
+    <files-path
+        name="*"
+        path="." />
+</paths>

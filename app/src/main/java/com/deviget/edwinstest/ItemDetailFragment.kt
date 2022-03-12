@@ -7,8 +7,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import coil.load
 import com.deviget.edwinstest.databinding.FragmentItemDetailBinding
+import kotlinx.coroutines.launch
 
 /**
  * A fragment representing a single Item detail screen.
@@ -17,10 +20,14 @@ import com.deviget.edwinstest.databinding.FragmentItemDetailBinding
  * on handsets.
  */
 class ItemDetailFragment : Fragment() {
-    private var postTitle: String? = null
-    private var postSubTitle: String? = null
-    private var postUrl: String? = null
-    private var postThumbnailUrl: String? = null
+    private lateinit var viewModelFactory: RedditPostsViewModelFactory
+    private lateinit var viewModel: RedditPostsViewModel
+
+    private var postId: String = ""
+    private var postTitle: String = ""
+    private var postSubTitle: String = ""
+    private var postUrl: String = ""
+    private var postThumbnailUrl: String = ""
 
     private var _binding: FragmentItemDetailBinding? = null
 
@@ -32,10 +39,11 @@ class ItemDetailFragment : Fragment() {
         super.onCreate(savedInstanceState)
 
         arguments?.let {
-            postTitle = it.getString(ARG_POST_TITLE)
-            postSubTitle = it.getString(ARG_POST_SUB_TITLE)
-            postUrl = it.getString(ARG_POST_URL)
-            postThumbnailUrl = it.getString(ARG_POST_THUMBNAIL_URL)
+            postId = it.getString(ARG_POST_ID).toString()
+            postTitle = it.getString(ARG_POST_TITLE).toString()
+            postSubTitle = it.getString(ARG_POST_SUB_TITLE).toString()
+            postUrl = it.getString(ARG_POST_URL).toString()
+            postThumbnailUrl = it.getString(ARG_POST_THUMBNAIL_URL).toString()
         }
     }
 
@@ -43,6 +51,8 @@ class ItemDetailFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        viewModelFactory = RedditPostsViewModelFactory(requireActivity())
+        viewModel = ViewModelProvider(this, viewModelFactory)[RedditPostsViewModel::class.java]
 
         _binding = FragmentItemDetailBinding.inflate(inflater, container, false)
         val rootView = binding.root
@@ -58,7 +68,7 @@ class ItemDetailFragment : Fragment() {
 
         val validatedImageSource =
             if (postThumbnailUrl == "default")
-                R.drawable.reddit_logo
+                "https://www.redditinc.com/assets/images/site/reddit-logo.png"
             else
                 postThumbnailUrl
 
@@ -70,6 +80,20 @@ class ItemDetailFragment : Fragment() {
                 it.context.startActivity(urlIntent)
             }
         }
+
+        binding.downloadButton.apply {
+            visibility = if (postThumbnailUrl.isNotEmpty()) View.VISIBLE else View.GONE
+
+            setOnClickListener {
+                downloadPostThumbnail()
+            }
+        }
+    }
+
+    private fun downloadPostThumbnail() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.downloadFile(postThumbnailUrl, postId)
+        }
     }
 
     override fun onDestroyView() {
@@ -78,6 +102,7 @@ class ItemDetailFragment : Fragment() {
     }
 
     companion object {
+        const val ARG_POST_ID = "ARG_POST_ID"
         const val ARG_POST_TITLE = "ARG_POST_TITLE"
         const val ARG_POST_SUB_TITLE = "ARG_POST_SUB_TITLE"
         const val ARG_POST_URL = "ARG_POST_URL"

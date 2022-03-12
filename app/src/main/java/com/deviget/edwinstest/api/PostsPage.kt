@@ -42,13 +42,21 @@ data class PostData(
     @SerialName("url")
     val url: String,
 
-    @SerialName("thumbnail")
-    val thumbnailUrl: String,
-
     @SerialName("num_comments")
     val numberOfComments: Int,
+
+    @SerialName("thumbnail")
+    private val thumbnailUrl: String,
 ) {
     var isRead: Boolean = false
+
+    fun getSafeThumbnailUrl(): String {
+        if (thumbnailUrl.isEmpty() || thumbnailUrl == "default") {
+            return "https://www.redditinc.com/assets/images/site/reddit-logo.png"
+        }
+
+        return thumbnailUrl
+    }
 
     fun getDisplayRelativeCreationTime(): CharSequence {
         return DateUtils.getRelativeTimeSpanString(

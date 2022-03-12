@@ -1,7 +1,11 @@
 package com.deviget.edwinstest
 
 import android.content.Context
+import android.content.Intent
+import android.os.Environment
 import android.util.Log
+import android.widget.Toast
+import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -12,6 +16,11 @@ import io.ktor.client.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*
 import io.ktor.client.features.logging.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.util.cio.*
+import io.ktor.utils.io.*
 import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +29,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.ExperimentalSerializationApi
+import java.io.File
 import java.lang.ref.WeakReference
+
 
 class RedditPostsViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -40,7 +51,7 @@ class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : Vie
 
     private var after: String = ""
 
-    private val redditApi = RedditApi(HttpClient {
+    private val client = HttpClient {
         install(JsonFeature) {
             serializer = KotlinxSerializer(kotlinx.serialization.json.Json {
                 prettyPrint = true
@@ -57,7 +68,9 @@ class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : Vie
             }
             level = LogLevel.ALL
         }
-    })
+    }
+
+    private val redditApi = RedditApi(client)
 
     init {
         fetchPostsPage(resetData = true)
@@ -167,6 +180,67 @@ class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : Vie
     fun clearDataSet() {
         _uiState.update {
             Result.Success(emptyList())
+        }
+    }
+
+    suspend fun downloadFile(url: String, postId: String) {
+        contextRef.get()?.let {
+            val file =
+                File(
+                    it.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),
+                    "reddit-$postId.jpg"
+                )
+            client.downloadFile(file, url, ::onFileDownloadEnded)
+        }
+    }
+
+    private suspend fun HttpClient.downloadFile(
+        file: File,
+        url: String,
+        callback: suspend (boolean: Boolean, file: File) -> Unit
+    ) {
+        val call = this.request<HttpResponse> {
+            url(url)
+            method = HttpMethod.Get
+        }
+        val downloadSuccessful = call.status.isSuccess()
+        if (downloadSuccessful) {
+            call.content.copyAndClose(file.writeChannel())
+        }
+        return callback(downloadSuccessful, file)
+    }
+
+    private fun onFileDownloadEnded(wasSuccessful: Boolean, file: File) {
+        contextRef.get()?.let { context ->
+            if (wasSuccessful) {
+
+                try {
+                    val intent = Intent(Intent.ACTION_VIEW)
+                        .setDataAndType(
+                            FileProvider.getUriForFile(
+                                context,
+                                BuildConfig.APPLICATION_ID + ".provider",
+                                file
+                            ),
+                            "image/*"
+                        ).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+                    context.startActivity(intent)
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.error_opening_file),
+                        Toast.LENGTH_LONG
+                    )
+                        .show()
+                }
+            } else {
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.download_failed),
+                    Toast.LENGTH_LONG
+                ).show()
+            }
         }
     }
 }

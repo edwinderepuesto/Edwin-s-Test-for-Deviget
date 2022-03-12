@@ -78,7 +78,6 @@ class ItemListFragment : Fragment() {
             viewModel.fetchPostsPage(resetData = false)
         }
 
-
         val adapter = SimpleItemRecyclerViewAdapter(
             emptyList(),
             itemDetailFragmentContainer,
@@ -164,17 +163,8 @@ class ItemListFragment : Fragment() {
 
             holder.subTitleTextView.text = subTitleText
 
-            val validatedImageSource =
-                if (item.data.thumbnailUrl == "default")
-                    R.drawable.reddit_logo
-                else
-                    item.data.thumbnailUrl
-
             holder.thumbnailImageView.apply {
-                load(validatedImageSource) {
-                    crossfade(true)
-                    fallback(R.drawable.reddit_logo)
-                }
+                load(item.data.getSafeThumbnailUrl()) { crossfade(true) }
 
                 setOnClickListener {
                     val urlIntent = Intent(Intent.ACTION_VIEW, Uri.parse(item.data.url))
@@ -191,6 +181,10 @@ class ItemListFragment : Fragment() {
 
                 val bundle = Bundle()
                 bundle.putString(
+                    ItemDetailFragment.ARG_POST_ID,
+                    item.data.id
+                )
+                bundle.putString(
                     ItemDetailFragment.ARG_POST_TITLE,
                     item.data.title
                 )
@@ -204,7 +198,7 @@ class ItemListFragment : Fragment() {
                 )
                 bundle.putString(
                     ItemDetailFragment.ARG_POST_THUMBNAIL_URL,
-                    item.data.thumbnailUrl
+                    item.data.getSafeThumbnailUrl()
                 )
                 if (itemDetailFragmentContainer != null) {
                     itemDetailFragmentContainer.findNavController()

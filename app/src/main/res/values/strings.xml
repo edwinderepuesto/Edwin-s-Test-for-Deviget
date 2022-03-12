@@ -10,5 +10,8 @@
     <string name="cross_mark_emoji">❌</string>
     <string name="dismiss_all">[Dismiss All]</string>
     <string name="fetch_new_page">[Fetch New Page]</string>
+    <string name="download">[Download]</string>
+    <string name="error_opening_file">Error opening file. Go to "Android/data/com.deviget.edwinstest/files/Download" to see your file.</string>
+    <string name="download_failed">Download failed. Please try again.</string>
 
 </resources>
