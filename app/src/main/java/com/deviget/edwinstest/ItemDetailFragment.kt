@@ -53,9 +53,8 @@ class ItemDetailFragment : Fragment() {
     }
 
     private fun updateContent() {
-        binding.toolbarLayout?.title = getString(R.string.details)
-        binding.detailTitleTextView?.text = postTitle
-        binding.detailSubTitleTextView?.text = postSubTitle
+        binding.detailTitleTextView.text = postTitle
+        binding.detailSubTitleTextView.text = postSubTitle
 
         val validatedImageSource =
             if (postThumbnailUrl == "default")
@@ -63,7 +62,7 @@ class ItemDetailFragment : Fragment() {
             else
                 postThumbnailUrl
 
-        binding.detailImageView?.apply {
+        binding.detailImageView.apply {
             load(validatedImageSource) { crossfade(true) }
 
             setOnClickListener {
