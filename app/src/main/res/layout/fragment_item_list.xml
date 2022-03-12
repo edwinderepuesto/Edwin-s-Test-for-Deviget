@@ -33,19 +33,29 @@
         android:maxLines="1"
         android:padding="5dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/dismiss_or_fetch_link"
+        app:layout_constraintEnd_toStartOf="@id/dismiss_link"
         app:layout_constraintStart_toStartOf="parent"
         tools:text="Status" />
 
     <TextView
-        android:id="@+id/dismiss_or_fetch_link"
+        android:id="@+id/dismiss_link"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:padding="5dp"
         android:text="@string/dismiss_all"
+        android:textColor="#FA0"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/fetch_new_page_link"
+        app:layout_constraintStart_toEndOf="@id/status_text_view" />
+
+    <TextView
+        android:id="@+id/fetch_new_page_link"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:text="@string/fetch_new_page"
         android:textColor="#00F"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/status_text_view" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

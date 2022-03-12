@@ -60,14 +60,27 @@ class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : Vie
     })
 
     init {
-        fetchPostsPage()
+        fetchPostsPage(resetData = true)
     }
 
-    fun fetchPostsPage() {
+    fun fetchPostsPage(resetData: Boolean) {
         fetchJob?.cancel()
 
         fetchJob = viewModelScope.launch {
             try {
+                // Only populated when needed:
+                var onlyPreviousPosts = emptyList<PostWrapper>()
+
+                if (resetData) {
+                    // Move to first page if resetting data:
+                    after = ""
+                } else {
+                    // Otherwise, keep the previous posts so we can append the fresh ones to them:
+                    (_uiState.value as? Result.Success)?.let { value ->
+                        onlyPreviousPosts = value.data
+                    }
+                }
+
                 _uiState.update {
                     Result.Loading(true)
                 }
@@ -76,25 +89,31 @@ class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : Vie
 
                 val pageData = redditApi.getTopPostsPage(accessToken, after).data
 
-                val newPostWrapperItems = pageData.children
+                val onlyNewPosts = pageData.children
 
+                // Mark fetched posts as read if previously cached as such:
                 contextRef.get()?.let { context ->
                     val sharedPref =
                         context.getSharedPreferences("reddit-client", Context.MODE_PRIVATE)
                     val storedReadPosts: MutableSet<String> =
                         sharedPref?.getStringSet("read-posts", mutableSetOf()) ?: mutableSetOf()
 
-                    for (currentPost in newPostWrapperItems) {
+                    for (currentPost in onlyNewPosts) {
                         val postWasRead = storedReadPosts.contains(currentPost.data.id)
 
                         currentPost.data.isRead = postWasRead
                     }
                 }
 
+                // Mark next page for later:
                 after = pageData.after
 
+                // Unify all required posts and update UI:
+                val previousAndNewPosts = mutableListOf<PostWrapper>()
+                previousAndNewPosts.addAll(onlyPreviousPosts)
+                previousAndNewPosts.addAll(onlyNewPosts)
                 _uiState.update {
-                    Result.Success(newPostWrapperItems)
+                    Result.Success(previousAndNewPosts)
                 }
             } catch (ioException: IOException) {
                 Log.d("ktor", "Error fetching posts:")
@@ -149,13 +168,5 @@ class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : Vie
         _uiState.update {
             Result.Success(emptyList())
         }
-    }
-
-    fun hasData(): Boolean {
-        (_uiState.value as? Result.Success)?.let { value ->
-            return value.data.isNotEmpty()
-        }
-
-        return false
     }
 }

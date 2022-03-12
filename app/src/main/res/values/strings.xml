@@ -9,6 +9,6 @@
     <string name="circle_emoji">🔴</string>
     <string name="cross_mark_emoji">❌</string>
     <string name="dismiss_all">[Dismiss All]</string>
-    <string name="fetch_page">[Fetch Page]</string>
+    <string name="fetch_new_page">[Fetch New Page]</string>
 
 </resources>

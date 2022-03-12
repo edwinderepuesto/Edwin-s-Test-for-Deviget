@@ -67,15 +67,17 @@ class ItemListFragment : Fragment() {
         val itemDetailFragmentContainer: View? = view.findViewById(R.id.item_detail_nav_container)
 
         binding.swipeRefreshLayout.setOnRefreshListener {
-            viewModel.fetchPostsPage()
+            viewModel.fetchPostsPage(resetData = true)
         }
 
-        binding.dismissOrFetchLink.setOnClickListener {
-            if (viewModel.hasData())
-                dismissAllPosts()
-            else
-                viewModel.fetchPostsPage()
+        binding.dismissLink.setOnClickListener {
+            dismissAllPosts()
         }
+
+        binding.fetchNewPageLink.setOnClickListener {
+            viewModel.fetchPostsPage(resetData = false)
+        }
+
 
         val adapter = SimpleItemRecyclerViewAdapter(
             emptyList(),
@@ -107,13 +109,6 @@ class ItemListFragment : Fragment() {
                             binding.swipeRefreshLayout.isRefreshing = false
                         }
                     }
-                    binding.dismissOrFetchLink.text =
-                        getString(
-                            if (viewModel.hasData())
-                                R.string.dismiss_all
-                            else
-                                R.string.fetch_page
-                        )
                 }
             }
         }
