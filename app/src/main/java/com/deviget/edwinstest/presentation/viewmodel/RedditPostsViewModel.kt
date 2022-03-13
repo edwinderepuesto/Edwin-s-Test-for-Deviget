@@ -15,6 +15,7 @@ import com.deviget.edwinstest.data.dto.PostData
 import com.deviget.edwinstest.data.dto.PostWrapper
 import com.deviget.edwinstest.data.repository.RedditRepository
 import io.ktor.utils.io.errors.*
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -25,15 +26,17 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import java.io.File
 import java.lang.ref.WeakReference
 
-class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : ViewModel() {
+class RedditPostsViewModel(
+    private val repository: RedditRepository,
+    private val contextRef: WeakReference<Context>,
+    private val dispatcher: CoroutineDispatcher
+) : ViewModel() {
     private val _uiState = MutableStateFlow<MyResult<List<PostWrapper>>>(MyResult.Loading(false))
     val uiState: StateFlow<MyResult<List<PostWrapper>>> = _uiState.asStateFlow()
 
     private var fetchJob: Job? = null
 
     private var after: String = ""
-
-    private val repository = RedditRepository()
 
     init {
         fetchPostsPage(resetData = true)
@@ -42,7 +45,7 @@ class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : Vie
     fun fetchPostsPage(resetData: Boolean) {
         fetchJob?.cancel()
 
-        fetchJob = viewModelScope.launch {
+        fetchJob = viewModelScope.launch(dispatcher) {
             try {
                 // Only populated when needed:
                 var onlyPreviousPosts = emptyList<PostWrapper>()
