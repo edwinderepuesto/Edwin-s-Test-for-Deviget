@@ -11,6 +11,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.deviget.edwinstest.api.PostData
 import com.deviget.edwinstest.api.PostWrapper
+import com.deviget.edwinstest.common.MyResult
 import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,8 +35,8 @@ class RedditPostsViewModelFactory(private val context: Context) : ViewModelProvi
 }
 
 class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : ViewModel() {
-    private val _uiState = MutableStateFlow<Result<List<PostWrapper>>>(Result.Loading(false))
-    val uiState: StateFlow<Result<List<PostWrapper>>> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow<MyResult<List<PostWrapper>>>(MyResult.Loading(false))
+    val uiState: StateFlow<MyResult<List<PostWrapper>>> = _uiState.asStateFlow()
 
     private var fetchJob: Job? = null
 
@@ -60,13 +61,13 @@ class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : Vie
                     after = ""
                 } else {
                     // Otherwise, keep the previous posts so we can append the fresh ones to them:
-                    (_uiState.value as? Result.Success)?.let { value ->
+                    (_uiState.value as? MyResult.Success)?.let { value ->
                         onlyPreviousPosts = value.data
                     }
                 }
 
                 _uiState.update {
-                    Result.Loading(true)
+                    MyResult.Loading(true)
                 }
 
                 val newPageData = repository.fetchPostsPage(after)
@@ -95,13 +96,13 @@ class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : Vie
                 previousAndNewPosts.addAll(onlyPreviousPosts)
                 previousAndNewPosts.addAll(onlyNewPosts)
                 _uiState.update {
-                    Result.Success(previousAndNewPosts)
+                    MyResult.Success(previousAndNewPosts)
                 }
             } catch (ioException: IOException) {
                 Log.d("ktor", "Error fetching posts:")
                 ioException.printStackTrace()
                 _uiState.update {
-                    Result.Error(ioException.message ?: "Unknown error")
+                    MyResult.Error(ioException.message ?: "Unknown error")
                 }
             }
         }
@@ -112,10 +113,10 @@ class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : Vie
         postData.isRead = true
 
         // Force UI update to reflect unread status change on tablets:
-        (_uiState.value as? Result.Success)?.let { value ->
+        (_uiState.value as? MyResult.Success)?.let { value ->
             val currentData = value.data
-            _uiState.update { Result.Loading(false) }
-            _uiState.update { Result.Success(currentData) }
+            _uiState.update { MyResult.Loading(false) }
+            _uiState.update { MyResult.Success(currentData) }
         }
 
         contextRef.get()?.let { context ->
@@ -135,20 +136,20 @@ class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : Vie
     }
 
     fun removePostIdFromDataSet(postIdToDelete: String) {
-        (_uiState.value as? Result.Success)?.let { value ->
+        (_uiState.value as? MyResult.Success)?.let { value ->
             val reducedList = value.data.toMutableList()
             // Delete using post id and not recycler view position, to avoid any edge case of
             // queued animation delays making us target the wrong post for deletion here:
             reducedList.removeIf { item -> item.data.id == postIdToDelete }
             _uiState.update {
-                Result.Success(reducedList)
+                MyResult.Success(reducedList)
             }
         }
     }
 
     fun clearDataSet() {
         _uiState.update {
-            Result.Success(emptyList())
+            MyResult.Success(emptyList())
         }
     }
 

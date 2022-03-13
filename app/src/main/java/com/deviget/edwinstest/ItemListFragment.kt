@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.deviget.edwinstest.api.PostData
 import com.deviget.edwinstest.api.PostWrapper
+import com.deviget.edwinstest.common.MyResult
 import com.deviget.edwinstest.databinding.FragmentItemListBinding
 import com.deviget.edwinstest.databinding.ItemListContentBinding
 import kotlinx.coroutines.delay
@@ -91,19 +92,19 @@ class ItemListFragment : Fragment() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { result ->
                     when (result) {
-                        is Result.Success -> {
+                        is MyResult.Success -> {
                             adapter.updateDataSet(result.data)
                             binding.statusTextView.text = getString(R.string.done)
                             binding.swipeRefreshLayout.isRefreshing = false
                         }
-                        is Result.Loading -> {
+                        is MyResult.Loading -> {
                             binding.statusTextView.text =
                                 getString(
                                     if (result.loading) R.string.fetching_new_page else R.string.idle
                                 )
                             binding.swipeRefreshLayout.isRefreshing = result.loading
                         }
-                        is Result.Error -> {
+                        is MyResult.Error -> {
                             binding.statusTextView.text = result.errorMessage
                             binding.swipeRefreshLayout.isRefreshing = false
                         }
