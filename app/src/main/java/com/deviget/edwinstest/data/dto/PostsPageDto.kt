@@ -1,6 +1,7 @@
 package com.deviget.edwinstest.data.dto
 
 import android.text.format.DateUtils
+import com.deviget.edwinstest.common.Constants
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -52,7 +53,7 @@ data class PostData(
 
     fun getSafeThumbnailUrl(): String {
         if (thumbnailUrl.isEmpty() || thumbnailUrl == "default") {
-            return "https://www.redditinc.com/assets/images/site/reddit-logo.png"
+            return Constants.FALLBACK_POST_IMAGE_URL
         }
 
         return thumbnailUrl

@@ -1,5 +1,6 @@
 package com.deviget.edwinstest.data.api
 
+import com.deviget.edwinstest.common.Constants
 import com.deviget.edwinstest.data.dto.AuthorizationResponse
 import com.deviget.edwinstest.data.dto.PostsPage
 import io.ktor.client.*
@@ -9,16 +10,19 @@ import io.ktor.http.*
 
 class RedditApi(private val client: HttpClient) {
     suspend fun requestAccessToken(): AuthorizationResponse =
-        client.post("https://www.reddit.com/api/v1/access_token") {
-            header(HttpHeaders.Authorization, "Basic LXFNQ1dEc3gtVFZzRGlobUFkRUxKUTo=")
+        client.post(Constants.REDDIT_ACCESS_TOKEN_URL) {
+            header(
+                HttpHeaders.Authorization,
+                "Basic " + Constants.REDDIT_ENCODED_BASIC_AUTHENTICATION
+            )
             body = FormDataContent(Parameters.build {
-                append("grant_type", "https://oauth.reddit.com/grants/installed_client")
-                append("device_id", "NON_TRACKED_DEVICE_ID")
+                append("grant_type", Constants.REDDIT_OAUTH_URL + "/grants/installed_client")
+                append("device_id", Constants.NON_TRACKED_DEVICE_ID)
             })
         }
 
     suspend fun getTopPostsPage(accessToken: String, after: String): PostsPage =
-        client.get("https://oauth.reddit.com/top?after=$after") {
+        client.get(Constants.REDDIT_OAUTH_URL + "/top?after=$after") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
         }
 }
