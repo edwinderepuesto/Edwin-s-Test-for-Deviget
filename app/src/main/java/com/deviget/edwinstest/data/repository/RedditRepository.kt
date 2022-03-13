@@ -1,8 +1,8 @@
-package com.deviget.edwinstest
+package com.deviget.edwinstest.data.repository
 
 import android.util.Log
-import com.deviget.edwinstest.api.PostsPageData
-import com.deviget.edwinstest.api.RedditApi
+import com.deviget.edwinstest.data.api.RedditApi
+import com.deviget.edwinstest.data.dto.PostsPageData
 import io.ktor.client.*
 import io.ktor.client.features.json.*
 import io.ktor.client.features.json.serializer.*

@@ -1,4 +1,4 @@
-package com.deviget.edwinstest
+package com.deviget.edwinstest.presentation
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -19,15 +19,17 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
-import com.deviget.edwinstest.api.PostData
-import com.deviget.edwinstest.api.PostWrapper
+import com.deviget.edwinstest.R
+import com.deviget.edwinstest.presentation.viewmodel.RedditPostsViewModel
+import com.deviget.edwinstest.presentation.viewmodel.RedditPostsViewModelFactory
 import com.deviget.edwinstest.common.MyResult
-import com.deviget.edwinstest.databinding.FragmentItemListBinding
-import com.deviget.edwinstest.databinding.ItemListContentBinding
+import com.deviget.edwinstest.data.dto.PostData
+import com.deviget.edwinstest.data.dto.PostWrapper
+import com.deviget.edwinstest.databinding.FragmentPostListBinding
+import com.deviget.edwinstest.databinding.ItemPostBinding
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.ExperimentalSerializationApi
-
 
 /**
  * This fragment has different presentations for handset and larger screen devices. On handsets, the
@@ -35,14 +37,13 @@ import kotlinx.serialization.ExperimentalSerializationApi
  * representing item details. On larger screens, the Navigation controller presents the list of
  * items and item details side-by-side using two vertical panes.
  */
-
 @ExperimentalSerializationApi
-class ItemListFragment : Fragment() {
+class PostListFragment : Fragment() {
     private lateinit var viewModelFactory: RedditPostsViewModelFactory
 
     private lateinit var viewModel: RedditPostsViewModel
 
-    private var _binding: FragmentItemListBinding? = null
+    private var _binding: FragmentPostListBinding? = null
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -56,7 +57,7 @@ class ItemListFragment : Fragment() {
 
         viewModel = ViewModelProvider(this, viewModelFactory)[RedditPostsViewModel::class.java]
 
-        _binding = FragmentItemListBinding.inflate(inflater, container, false)
+        _binding = FragmentPostListBinding.inflate(inflater, container, false)
         return binding.root
 
     }
@@ -142,7 +143,7 @@ class ItemListFragment : Fragment() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PostItemViewHolder {
             val binding =
-                ItemListContentBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+                ItemPostBinding.inflate(LayoutInflater.from(parent.context), parent, false)
             return PostItemViewHolder(binding)
         }
 
@@ -182,30 +183,30 @@ class ItemListFragment : Fragment() {
 
                 val bundle = Bundle()
                 bundle.putString(
-                    ItemDetailFragment.ARG_POST_ID,
+                    PostDetailsFragment.ARG_POST_ID,
                     item.data.id
                 )
                 bundle.putString(
-                    ItemDetailFragment.ARG_POST_TITLE,
+                    PostDetailsFragment.ARG_POST_TITLE,
                     item.data.title
                 )
                 bundle.putString(
-                    ItemDetailFragment.ARG_POST_SUB_TITLE,
+                    PostDetailsFragment.ARG_POST_SUB_TITLE,
                     subTitleText
                 )
                 bundle.putString(
-                    ItemDetailFragment.ARG_POST_URL,
+                    PostDetailsFragment.ARG_POST_URL,
                     item.data.url
                 )
                 bundle.putString(
-                    ItemDetailFragment.ARG_POST_THUMBNAIL_URL,
+                    PostDetailsFragment.ARG_POST_THUMBNAIL_URL,
                     item.data.getSafeThumbnailUrl()
                 )
                 if (itemDetailFragmentContainer != null) {
                     itemDetailFragmentContainer.findNavController()
-                        .navigate(R.id.fragment_item_detail, bundle)
+                        .navigate(R.id.fragment_post_details, bundle)
                 } else {
-                    itemView.findNavController().navigate(R.id.show_item_detail, bundle)
+                    itemView.findNavController().navigate(R.id.show_post_details, bundle)
                 }
             }
         }
@@ -218,7 +219,7 @@ class ItemListFragment : Fragment() {
             notifyDataSetChanged()
         }
 
-        inner class PostItemViewHolder(binding: ItemListContentBinding) :
+        inner class PostItemViewHolder(binding: ItemPostBinding) :
             RecyclerView.ViewHolder(binding.root) {
             val titleTextView: TextView = binding.titleTextView
             val subTitleTextView: TextView = binding.subTitleTextView

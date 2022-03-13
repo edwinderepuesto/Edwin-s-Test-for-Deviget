@@ -3,11 +3,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph_details"
-    app:startDestination="@id/fragment_item_detail">
+    app:startDestination="@id/fragment_post_details">
     <fragment
-        android:id="@+id/fragment_item_detail"
-        android:name="com.deviget.edwinstest.ItemDetailFragment"
+        android:id="@+id/fragment_post_details"
+        android:name="com.deviget.edwinstest.presentation.PostDetailsFragment"
         android:label="@string/details"
-        tools:layout="@layout/fragment_item_detail" />
+        tools:layout="@layout/fragment_post_details" />
 
 </navigation>

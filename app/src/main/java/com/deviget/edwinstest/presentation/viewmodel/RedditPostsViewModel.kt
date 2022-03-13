@@ -1,4 +1,4 @@
-package com.deviget.edwinstest
+package com.deviget.edwinstest.presentation.viewmodel
 
 import android.content.Context
 import android.content.Intent
@@ -7,11 +7,13 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.deviget.edwinstest.api.PostData
-import com.deviget.edwinstest.api.PostWrapper
+import com.deviget.edwinstest.BuildConfig
+import com.deviget.edwinstest.R
 import com.deviget.edwinstest.common.MyResult
+import com.deviget.edwinstest.data.dto.PostData
+import com.deviget.edwinstest.data.dto.PostWrapper
+import com.deviget.edwinstest.data.repository.RedditRepository
 import io.ktor.utils.io.errors.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,17 +24,6 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.ExperimentalSerializationApi
 import java.io.File
 import java.lang.ref.WeakReference
-
-
-class RedditPostsViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(RedditPostsViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return RedditPostsViewModel(WeakReference(context)) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
 
 class RedditPostsViewModel(private val contextRef: WeakReference<Context>) : ViewModel() {
     private val _uiState = MutableStateFlow<MyResult<List<PostWrapper>>>(MyResult.Loading(false))

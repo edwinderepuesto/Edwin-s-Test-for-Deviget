@@ -1,4 +1,4 @@
-package com.deviget.edwinstest
+package com.deviget.edwinstest.presentation
 
 import android.content.Intent
 import android.net.Uri
@@ -10,16 +10,18 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import coil.load
-import com.deviget.edwinstest.databinding.FragmentItemDetailBinding
+import com.deviget.edwinstest.presentation.viewmodel.RedditPostsViewModel
+import com.deviget.edwinstest.presentation.viewmodel.RedditPostsViewModelFactory
+import com.deviget.edwinstest.databinding.FragmentPostDetailsBinding
 import kotlinx.coroutines.launch
 
 /**
  * A fragment representing a single Item detail screen.
- * This fragment is either contained in a [ItemListFragment]
+ * This fragment is either contained in a [PostListFragment]
  * in two-pane mode (on larger screen devices) or self-contained
  * on handsets.
  */
-class ItemDetailFragment : Fragment() {
+class PostDetailsFragment : Fragment() {
     private lateinit var viewModelFactory: RedditPostsViewModelFactory
     private lateinit var viewModel: RedditPostsViewModel
 
@@ -29,7 +31,7 @@ class ItemDetailFragment : Fragment() {
     private var postUrl: String = ""
     private var postThumbnailUrl: String = ""
 
-    private var _binding: FragmentItemDetailBinding? = null
+    private var _binding: FragmentPostDetailsBinding? = null
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -54,7 +56,7 @@ class ItemDetailFragment : Fragment() {
         viewModelFactory = RedditPostsViewModelFactory(requireActivity())
         viewModel = ViewModelProvider(this, viewModelFactory)[RedditPostsViewModel::class.java]
 
-        _binding = FragmentItemDetailBinding.inflate(inflater, container, false)
+        _binding = FragmentPostDetailsBinding.inflate(inflater, container, false)
         val rootView = binding.root
 
         updateContent()

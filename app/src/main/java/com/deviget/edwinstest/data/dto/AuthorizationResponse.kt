@@ -1,4 +1,4 @@
-package com.deviget.edwinstest.api
+package com.deviget.edwinstest.data.dto
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

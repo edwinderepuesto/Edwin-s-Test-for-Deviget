@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.EdwinsTest">
         <activity
-            android:name=".ItemDetailHostActivity"
+            android:name=".presentation.MainActivity"
             android:exported="true"
             android:resizeableActivity="true"
             tools:targetApi="24">

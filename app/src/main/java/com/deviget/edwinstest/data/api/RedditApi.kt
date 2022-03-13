@@ -1,5 +1,7 @@
-package com.deviget.edwinstest.api
+package com.deviget.edwinstest.data.api
 
+import com.deviget.edwinstest.data.dto.AuthorizationResponse
+import com.deviget.edwinstest.data.dto.PostsPage
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
